@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "i8080"
+version = "0.1.0"
+description = ""
+authors = ["Scott Mansell <phiren@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+amaranth = {git = "https://github.com/amaranth-lang/amaranth.git"}
+amaranth-yosys = "^0.10.0.dev47"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

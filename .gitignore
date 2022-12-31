@@ -1,0 +1,4 @@
+*.v
+*.vcd
+*.pyc
+poetry.lock

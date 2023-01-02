@@ -13,31 +13,33 @@ def read_microcode():
     # If you look at a photo of the 8086 die, Reengine's microcode ROM extracts are laid out as:
     #
     # 84x128 microcode storage:
-    #   <-----------64 cols------------->   <-----------64 cols------------->
+    #   <------------------------------128 cols------------------------------>
     # +-----------------------------------+-----------------------------------+
-    # |                                   |                                   |
-    # |              l0a.txt              |              r0a.txt              | <- 24 rows
-    # |                                   |                                   |
+    # |                                                                       |
+    # |                           l0a.txt + r0a.txt                           | <- 24 rows
+    # |                                                                       |
     # +-----------------------------------+-----------------------------------+
-    # |                                   |                                   |
-    # |              l1a.txt              |              r1a.txt              | <- 24 rows
-    # |                                   |                                   |
+    # |                                                                       |
+    # |                           l1a.txt + r1a.txt                           | <- 24 rows
+    # |                                                                       |
     # +-----------------------------------+-----------------------------------+
-    # |                                   |                                   |
-    # |              l2a.txt              |              r2a.txt              | <- 24 rows
-    # |                                   |                                   |
+    # |                                                                       |
+    # |                           l2a.txt + r2a.txt                           | <- 24 rows
+    # |                                                                       |
     # +-----------------------------------+-----------------------------------+
-    # |              l3a.txt              |              r3a.txt              | <- Only 12 rows
+    # |                           l3a.txt + r3a.txt                           | <- 24 rows
     # +-----------------------------------+-----------------------------------+
     #
+    # the l files contain the left side of each column, the r files contain the right side
+    # So the bits in both files need to be interleaved
+    #
     # (the a files have 8086, the non-a files have 8088. They are mostly identical)
-    # So we need to glue the files back together
 
     # Additionally, we need to convert it back to the original 512x21 layout
     # by splitting each 84 bit column into four 21 bit columns
 
     def read_half(half):
-        # load left and right bitplanes into two 84x64 matrices
+        # load left and right extracts into two 84x64 matrices
         half = ("".join([open(f"microcode/{half}{i}a.txt", "rt").read() for i in range(4)])).splitlines()
 
         # invert the bits
@@ -46,10 +48,10 @@ def read_microcode():
         # transpose to get 64 rows of 84 columns
         return [ "".join([half[x][y] for x in range(84)]) for y in range(64)]
 
-    # interleave right halves and zip the lines together
+    # interleave left and right halves together to get full 84x128 matrix
     microcode = [row for zipped in zip(read_half('l'), read_half('r')) for row in zipped]
 
-    # split each row into four 21 bit rows
+    # split each 84 bit row into four 21 bit rows
     microcode = [ "".join([row[x] for x in range(3 - i, 84, 4)]) for row in microcode for i in range(4) ]
 
     # convert from binary ascii to int

@@ -88,14 +88,17 @@ def read_column_selector():
 
     for bot, top in zip(read_horizontal("b"), read_horizontal("t")):
         # Intel scrambled this to make the layout better. Lets rearrange back to a sensible order
-        match_zero =  int(top[7] + bot[2] + bot[1] + bot[0] + top[5:7] + top[8:] + top[3:5], 2)
-        match_one  =  int(bot[7] + top[2] + top[1] + top[0] + bot[5:7] + bot[8:] + bot[3:5], 2)
+        match_zero =  top[7] + bot[2] + bot[1] + bot[0] + top[5:7] + top[8:] + top[3:5]
+        match_one  =  bot[7] + top[2] + top[1] + top[0] + bot[5:7] + bot[8:] + bot[3:5]
 
-        selector.append((match_zero, match_one))
+        # convert to string of "0", "1" and "-" for don't care
+        map = {('1', '0') : "0", ('0', '1') : "1", ('1', '1') : "-"}
+        pattern = "".join([map[(a, b)] for a, b in zip(match_zero, match_one)])
+
+
+        selector.append(pattern)
 
     return selector
-
-
 
 microcode = read_microcode()
 selector = read_column_selector()
@@ -318,19 +321,9 @@ def disassemble():
             print("    ", end='')
 
         if (addr % 4) == 0:
-            zeros, ones = selector[addr // 4]
-            for mask in [1 << 10-n for n in range(11)]:
-                if mask & zeros and mask & ones:
-                    print("?", end='')
-                elif mask & zeros:
-                    print("0", end='')
-                elif mask & ones:
-                    print("1", end='')
-                else:
-                    print("*", end='')
-
-                if mask == 0x4:
-                    print(".", end='')
+            pattern = selector[addr // 4]
+            pattern = pattern.replace("-", "?")
+            print(pattern[:9] + "." + pattern[9:], end='')
         else:
             print(" " * 12, end='')
         print("  ")

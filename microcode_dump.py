@@ -100,8 +100,43 @@ def read_column_selector():
 
     return selector
 
+def horizontal_cat(prefix, seq, postfix):
+    files = [open(f"{prefix}{i}{postfix}", "rt").read().splitlines() for i in seq]
+    return ["".join(zipped) for zipped in zip(*files)]
+
+def interleave_cols(left, right):
+    return ["".join([c for zipped in zip(*row) for c in zipped]) for row in zip(left, right)]
+
+def read_group():
+    upper_left = horizontal_cat("microcode/group_upper_", range(1, 4), "l.txt",)
+    upper_right = horizontal_cat("microcode/group_upper_", range(1, 4), "r.txt")
+    output = interleave_cols(upper_left, upper_right)
+
+    input = horizontal_cat("microcode/group_lower_", range(1, 4), ".txt")
+
+
+    input_pattern = []
+
+    # Thanks to reenigne for working out this scramble
+    scramble = [1, 0,  3, 2,  4, 6,  5, 7,  11, 10,  12, 13,  8, 9,  15, 14,  16, 17 ]
+    for x in range(38):
+        pattern = ""
+        for y in range(9):
+            o = input[scramble[y*2  ]][x]
+            z = input[scramble[y*2+1]][x]
+            match (o, z):
+                case ("0", "0"): pattern += "*" #raise Exception(f"Invalid pattern at {x} {y}")
+                case ("0", "1"): pattern += "0"
+                case ("1", "0"): pattern += "1"
+                case ("1", "1"): pattern += "-"
+        print(f"pattern {x:2} = {pattern}")
+        input_pattern.append(pattern)
+
+    return (input_pattern, output)
+
 microcode = read_microcode()
 selector = read_column_selector()
+group_input, group_output = read_group()
 
 class regNames(Enum):
     RA = 0x0        # ES
@@ -328,5 +363,11 @@ def disassemble():
             print(" " * 12, end='')
         print("  ")
 
+
+
 if __name__ == "__main__":
-    disassemble()
+    #disassemble()
+
+
+    print(len(group_output), len(group_output[0]))
+    print(len(group_input), len(group_input[1]))

@@ -108,12 +108,8 @@ def interleave_cols(left, right):
     return ["".join([c for zipped in zip(*row) for c in zipped]) for row in zip(left, right)]
 
 def read_group():
-    upper_left = horizontal_cat("microcode/group_upper_", range(1, 4), "l.txt",)
-    upper_right = horizontal_cat("microcode/group_upper_", range(1, 4), "r.txt")
-    output = interleave_cols(upper_left, upper_right)
-
+    output = open(f"microcode/group_upper.txt", "rt").read().splitlines()
     input = horizontal_cat("microcode/group_lower_", range(1, 4), ".txt")
-
 
     input_pattern = []
 
@@ -125,7 +121,7 @@ def read_group():
             o = input[scramble[y*2  ]][x]
             z = input[scramble[y*2+1]][x]
             match (o, z):
-                case ("0", "0"): pattern += "*" #raise Exception(f"Invalid pattern at {x} {y}")
+                case ("0", "0"): raise Exception(f"Invalid pattern at {x} {y}")
                 case ("0", "1"): pattern += "0"
                 case ("1", "0"): pattern += "1"
                 case ("1", "1"): pattern += "-"

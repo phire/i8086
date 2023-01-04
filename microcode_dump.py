@@ -125,7 +125,7 @@ def read_group():
                 case ("0", "1"): pattern += "0"
                 case ("1", "0"): pattern += "1"
                 case ("1", "1"): pattern += "-"
-        print(f"pattern {x:2} = {pattern}")
+        #print(f"pattern {x:2} = {pattern}")
         input_pattern.append(pattern)
 
     return (input_pattern, output)

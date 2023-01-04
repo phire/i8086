@@ -10,6 +10,8 @@ class ColumSelector(Elaboratable):
         Each instruction starts at a unique offset spaced every 16 instructions, and a counter increments though 16 states.
         But intel have optimized it down to the equivalent of a 512x21bit rom (128 cols) by storing duplicated logical column
         at the same physical column.
+        There is a lot of duplication, because many instructions outright share the same microcode routines. Also, most microcode
+        Routines don't use the full 16 instructions allocated.
 
         In real hardware, this column selector takes a 11 bit address and activates one of the 128 columns.
         For this implementation, it outputs a 7 bit column index that can be indexed into an FPGA's blockram.
@@ -37,6 +39,31 @@ class ColumSelector(Elaboratable):
                 else:
                     with m.Case(pattern): # note: pattern has don't cares
                         m.d.comb += self.o_column_index.eq(column)
+        return m
+
+class Microcode(Elaboratable):
+    def __init__(self):
+        self.i_addr = Signal(13)
+        self.o_instruction = Signal(21)
+
+        # private
+        self.selector = ColumSelector()
+        self.store = Memory(width=21, depth=512, name="microcode store", init=microcode_dump.microcode)
+
+    def elaborate(self, platform):
+        m = Module()
+
+        m.submodules.selector = self.selector
+
+        read_port = self.store.read_port()
+
+        m.d.comb += [
+            self.selector.i_addr.eq(self.i_addr[2:]),
+            self.store_address.eq(Cat(self.selector.o_column_index, self.i_addr[:2])),
+            read_port.addr.eq(self.store_address),
+            self.o_instruction.eq(read_port.data),
+        ]
+
         return m
 
 
